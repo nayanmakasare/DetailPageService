@@ -33,10 +33,10 @@ const (
 )
 
 const (
-	defaultHost = "mongodb://nayan:tlwn722n@cluster0-shard-00-00-8aov2.mongodb.net:27017,cluster0-shard-00-01-8aov2.mongodb.net:27017,cluster0-shard-00-02-8aov2.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority"
-	//developmentMongoHost = "mongodb://192.168.1.9:27017"
+	//defaultHost = "mongodb://nayan:tlwn722n@cluster0-shard-00-00-8aov2.mongodb.net:27017,cluster0-shard-00-01-8aov2.mongodb.net:27017,cluster0-shard-00-02-8aov2.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority"
+	developmentMongoHost = "mongodb://dev-uni.cloudwalker.tv:6592"
 	schedularMongoHost = "mongodb://localhost:27017"
-	schedularRedisHost = "localhost:6379"
+	schedularRedisHost = "redis:6379"
 )
 
 type nullawareStrDecoder struct{}
@@ -178,8 +178,8 @@ func main()  {
 
 	serverhandler := initializeProcess();
 
-	grpcAddress := fmt.Sprintf("%s:%d", "localhost", 7767)
-	restAddress := fmt.Sprintf("%s:%d", "localhost", 7768)
+	grpcAddress := fmt.Sprintf(":%d",  7767)
+	restAddress := fmt.Sprintf(":%d", 7768)
 	certFile := "cert/server.crt"
 	keyFile := "cert/server.key"
 
@@ -207,7 +207,7 @@ func main()  {
 }
 
 func initializeProcess() apihandler.Server  {
-	tileCollection := getMongoCollection("test", "cwmovies", defaultHost);
+	tileCollection := getMongoCollection("cwtx2devel", "tiles", developmentMongoHost);
 	return apihandler.Server{TileCollection:tileCollection}
 }
 
