@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
+	"math/rand"
 	"strings"
+	"time"
 )
 
 
@@ -68,40 +69,57 @@ func(s *Server) GetDetailInfo(ctx context.Context, tileInfo *pb.TileInfoRequest)
 	if len(tile.Posters.Portrait) > 0 {
 		detailTileInfo.Portrait = tile.Posters.Portrait[0]
 	}
-	var metaSet []string
+	metaSet := make(map[string]string)
 
 	// creating pipes for mongo aggregation
 	myStages := mongo.Pipeline{}
+
+
+	myStages = append(myStages,bson.D{{"$match", bson.D{{"ref_id", bson.D{{"$ne", tileInfo.GetTileId()}}}}}},)
+
+
+	// fetching related content
+	//myStages = append(myStages , bson.D{{"$match", bson.D{{"content.publishState", true}}}})
 
 	if len(tile.Metadata.Categories) > 0 {
 		myStages = append(myStages, bson.D{{"$match", bson.D{{"metadata.categories", bson.D{{"$in", tile.Metadata.Categories}}}}}})
 	}
 
 	if len(tile.Metadata.Genre) > 0 {
-		metaSet = append(metaSet, strings.Join(tile.Metadata.Genre, ","))
+		metaSet["genre"] = strings.Join(tile.Metadata.Genre, ",")
 		myStages = append(myStages, bson.D{{"$match", bson.D{{"metadata.genre", bson.D{{"$in", tile.Metadata.Genre}}}}}})
 	}
 
 	if len(tile.Metadata.Languages) > 0 {
-		metaSet = append(metaSet, strings.Join(tile.Metadata.Languages, ","))
+		metaSet["language"] = strings.Join(tile.Metadata.Languages, ",")
 		myStages = append(myStages, bson.D{{"$match", bson.D{{"metadata.languages", bson.D{{"$in", tile.Metadata.Languages}}}}}})
 	}
 
+
 	if len(tile.Metadata.Runtime) > 0  {
-		metaSet = append(metaSet, tile.Metadata.Runtime)
+		metaSet["runtime"] = tile.Metadata.Runtime
 	}
 	if len(tile.Metadata.Year) > 0 {
-		metaSet = append(metaSet, tile.Metadata.Year)
+		metaSet["year"] = tile.Metadata.Year
 	}
 	if tile.Metadata.Rating != 0 {
-		metaSet = append(metaSet, fmt.Sprint(tile.Metadata.Rating))
+		metaSet["rating"] = fmt.Sprint(tile.Metadata.Rating)
 	}
 	if len(tile.Content.Source) > 0 {
-		metaSet = append(metaSet, tile.Content.Source)
+		metaSet["source"] = tile.Content.Source
+	}
+
+	if(len(tile.Metadata.Cast) > 0){
+		metaSet["cast"] = strings.Join(tile.Metadata.Cast, ",")
+	}
+
+	if(len(tile.Metadata.Directors) > 0){
+		metaSet["director"] = strings.Join(tile.Metadata.Directors, ",")
 	}
 
 	detailTileInfo.Metadata = metaSet
 	detailTileInfo.Synopsis = tile.Metadata.Synopsis
+	detailTileInfo.Target = tile.Content.Target
 
 	var buttons []*pb.Button
 	for _, v := range tile.Buttons {
@@ -113,7 +131,7 @@ func(s *Server) GetDetailInfo(ctx context.Context, tileInfo *pb.TileInfoRequest)
 		buttons = append(buttons, &button)
 	}
 	detailTileInfo.Button = buttons
-	// fetching related content
+
 	myStages = append(myStages,bson.D{{"$sort", bson.D{{"created_at", -1}, {"updated_at", -1}, {"metadata.year", -1}}}},)
 
 	myStages = append(myStages,bson.D{{"$limit", 15}})
@@ -135,8 +153,7 @@ func(s *Server) GetDetailInfo(ctx context.Context, tileInfo *pb.TileInfoRequest)
 	cur, err := s.TileCollection.Aggregate(ctx, myStages)
 
 	if err != nil {
-		log.Println("refresh 8 ")
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var relatedTiles []*pb.ContentTile
@@ -167,6 +184,9 @@ func(s *Server) GetDetailInfo(ctx context.Context, tileInfo *pb.TileInfoRequest)
 		contentTile.PackageName = mTile.Content.Package
 		relatedTiles = append(relatedTiles, &contentTile)
 	}
+
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(relatedTiles), func(i, j int) { relatedTiles[i], relatedTiles[j] = relatedTiles[j], relatedTiles[i] })
 	detailTileInfo.ContentTile = relatedTiles
 
 	return &detailTileInfo, nil

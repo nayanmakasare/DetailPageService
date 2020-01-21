@@ -11,7 +11,7 @@
     "application/json"
   ],
   "paths": {
-    "/getDetailInfo": {
+    "/detail/getDetailInfo": {
       "post": {
         "operationId": "GetDetailInfo",
         "responses": {
@@ -105,8 +105,8 @@
           "type": "string"
         },
         "metadata": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "string"
           }
         },
@@ -130,6 +130,12 @@
         },
         "portrait": {
           "type": "string"
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

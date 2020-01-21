@@ -8,7 +8,7 @@ import   "google/api/annotations.proto";
 service DetailPageService{
     rpc GetDetailInfo(TileInfoRequest) returns (DetailTileInfo){
         option (google.api.http) = {
-                post:"/getDetailInfo"
+                post:"/detail/getDetailInfo"
                 body: "*"
         };
     }
@@ -22,12 +22,13 @@ message TileInfoRequest{
 message DetailTileInfo{
     string title = 1;
     string synopsis = 2;
-    repeated string metadata  = 3;
+    map<string, string> metadata = 3;
     repeated Button button = 4;
     repeated ContentTile contentTile = 5;
     string backDrop = 6;
     string poster = 7;
     string portrait = 8;
+    repeated string target = 9;
 }
 
 message Button {

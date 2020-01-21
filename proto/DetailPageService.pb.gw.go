@@ -155,7 +155,7 @@ func RegisterDetailPageServiceHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_DetailPageService_GetDetailInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"getDetailInfo"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_DetailPageService_GetDetailInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"detail", "getDetailInfo"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
